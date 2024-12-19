@@ -1,0 +1,307 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package com.mycompany.view;
+
+import com.mycompany.model.Table;
+import com.mycompany.service.TableService;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+
+/**
+ *
+ * @author Admin
+ */
+public final class SelectTableForm extends javax.swing.JFrame {
+
+    /**
+     * Creates new form SelectTableForm
+     */
+    private JLabel selectedLabel;
+    private List<JLabel> ls;
+    private POSForm pos;
+
+    public SelectTableForm(POSForm pos) {
+
+        initComponents();
+        this.pos = pos;
+        this.ls = new ArrayList<JLabel>();
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Table");
+
+        // Set the background color of the JFrame to white
+        getContentPane().setBackground(Color.WHITE);
+        handleShowTableList();
+        setLocationRelativeTo(null);
+        handleStatusBtn();
+    }
+
+    private void handleStatusBtn() {
+        if (this.selectedLabel == null) {
+            orderBtn.setEnabled(false);
+            payBtn.setEnabled(false);
+            billBtn.setEnabled(false);
+            return;
+        }
+        Table t = (Table) this.selectedLabel.getClientProperty("Tabel");
+        if (t.getBill() == null) {
+            orderBtn.setEnabled(true);
+            payBtn.setEnabled(false);
+            billBtn.setEnabled(false);
+        } else {
+            orderBtn.setEnabled(false);
+            payBtn.setEnabled(true);
+            billBtn.setEnabled(true);
+        }
+
+    }
+
+    private void handleShowTableList() {
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setViewportView(mainPanel);
+        int maxLabelsPerLine = 5;
+
+        // Add components with wrapping behavior
+        JPanel currentLinePanel = new JPanel();
+        currentLinePanel.setLayout(new FlowLayout(FlowLayout.LEFT, 25, 25)); // Add margin
+        List<Table> tableList = pos.getTableList();
+        int i = 0;
+        for (Table table : tableList) {
+            i++;
+            JLabel label = new JLabel(table.getName());
+            ls.add(label);
+            label.setPreferredSize(new Dimension(60, 60)); // Set preferred size
+            label.setOpaque(true); // Make the label opaque to set background color
+            handleCursor(label);
+            // Set background color to light blue (173, 216, 230)
+            label.setBackground(new Color(173, 216, 230));
+            label.putClientProperty("ID", table.getId());
+            label.putClientProperty("Tabel", table);
+            label.setHorizontalAlignment(SwingConstants.CENTER);
+            label.setVerticalAlignment(SwingConstants.CENTER);
+            setLabelStatus(label, table.getBill() != null);
+            if (table.getBill() != null) {
+                table.getBill().printBill();
+            }
+            // Set the third label to be disabled, and the rest to be enabled
+            currentLinePanel.add(label);
+
+            // Check if the maximum labels per line is reached
+            if (i % maxLabelsPerLine == 0) {
+                mainPanel.add(currentLinePanel);
+                currentLinePanel = new JPanel();
+                currentLinePanel.setLayout(new FlowLayout(FlowLayout.LEFT, 25, 25)); // Add margin
+            }
+
+        }
+
+        // Add the last line if it's not already added
+        if (currentLinePanel.getComponentCount() > 0) {
+            mainPanel.add(currentLinePanel);
+        }
+
+        add(jScrollPane1);
+
+    }
+
+    private void setLabelStatus(JLabel label, boolean enabled) {
+        if (enabled) {
+            label.setBackground(new Color(173, 216, 230)); // Set background color to light blue
+            label.setBorder(BorderFactory.createLineBorder(new Color(173, 216, 230), 2)); // Set blue border
+        } else {
+            label.setBackground(Color.WHITE); // Set background color to white
+            label.setBorder(BorderFactory.createLineBorder(new Color(173, 216, 230), 2)); // Set blue border
+        }
+
+//        label.setEnabled(enabled);
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    public void handleCursor(JLabel label) {
+        label.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Retrieve the ID from the client property
+                Object idObject = label.getClientProperty("ID");
+                if (idObject != null) {
+                    if (!label.equals(selectedLabel)) {
+
+                        SelectTableForm.this.selectedLabel = label;
+                        System.out.println("2");
+                        Table table = ((Table) selectedLabel.getClientProperty("Table"));
+                        if (table != null && table.getBill() != null) {
+                            table.getBill().printBill();
+                        }
+
+                        System.out.println("2");
+                        handleSelectTable();
+                    } else {
+                        label.setBorder(BorderFactory.createLineBorder(new Color(173, 216, 230), 2));
+                        SelectTableForm.this.selectedLabel = null;
+                    }
+
+                }
+                handleStatusBtn();
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (label.isEnabled()) {
+                    label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                label.setCursor(Cursor.getDefaultCursor());
+            }
+        });
+    }
+
+    public void handleSelectTable() {
+        for (JLabel l : ls) {
+            l.setBorder(BorderFactory.createLineBorder(new Color(173, 216, 230), 2));
+        }
+        selectedLabel.setBorder(BorderFactory.createLineBorder(new Color(0, 150, 255), 2));
+    }
+
+    public void customComponents() {
+
+    }
+
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jPanel1 = new javax.swing.JPanel();
+        payBtn = new javax.swing.JButton();
+        billBtn = new javax.swing.JButton();
+        orderBtn = new javax.swing.JButton();
+        cancelBtn = new javax.swing.JButton();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(459, 220));
+        getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+        payBtn.setText("Pay");
+        payBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                payBtnActionPerformed(evt);
+            }
+        });
+        jPanel1.add(payBtn);
+
+        billBtn.setText("Bill");
+        billBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                billBtnActionPerformed(evt);
+            }
+        });
+        jPanel1.add(billBtn);
+
+        orderBtn.setText("Order");
+        orderBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                orderBtnActionPerformed(evt);
+            }
+        });
+        jPanel1.add(orderBtn);
+
+        cancelBtn.setText("Cancel");
+        cancelBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelBtnActionPerformed(evt);
+            }
+        });
+        jPanel1.add(cancelBtn);
+
+        getContentPane().add(jPanel1, java.awt.BorderLayout.SOUTH);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
+        this.pos.handleOrderTable(null);
+        this.dispose();
+    }//GEN-LAST:event_cancelBtnActionPerformed
+
+    private void billBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_billBtnActionPerformed
+        Table table = (Table) this.selectedLabel.getClientProperty("Tabel");
+        for (Table t : pos.getTableList()) {
+            if (t.getBill() != null) {
+                t.getBill().printBill();
+            }
+        }
+        BillForm bf = new BillForm(table.getBill());
+        bf.setResizable(false);
+        bf.setDefaultCloseOperation(bf.HIDE_ON_CLOSE);
+        bf.setVisible(true);
+        bf.setLocationRelativeTo(null);
+    }//GEN-LAST:event_billBtnActionPerformed
+
+    private void orderBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_orderBtnActionPerformed
+
+        this.pos.handleOrderTable((Table) this.selectedLabel.getClientProperty("Tabel"));
+        this.dispose();
+    }//GEN-LAST:event_orderBtnActionPerformed
+
+    private void payBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payBtnActionPerformed
+
+        int option = JOptionPane.showConfirmDialog(rootPane, "Do you want to perform an action?",
+                "Confirmation", JOptionPane.YES_NO_CANCEL_OPTION);
+
+        // Handle different options using if-else
+        if (option == JOptionPane.YES_OPTION) {
+            Table t = (Table) this.selectedLabel.getClientProperty("Tabel");
+            t.setBill(null);
+            handleShowTableList();
+        } else if (option == JOptionPane.NO_OPTION) {
+
+        } else if (option == JOptionPane.CANCEL_OPTION) {
+
+        } else {
+            // User closed the dialog without making a choice
+
+        }
+
+
+    }//GEN-LAST:event_payBtnActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton billBtn;
+    private javax.swing.JButton cancelBtn;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton orderBtn;
+    private javax.swing.JButton payBtn;
+    // End of variables declaration//GEN-END:variables
+}
